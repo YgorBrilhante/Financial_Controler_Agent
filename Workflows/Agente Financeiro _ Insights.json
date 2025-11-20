@@ -1,0 +1,295 @@
+{
+  "name": "Agente Financeiro | Insights",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "userId"
+            },
+            {
+              "name": "message"
+            },
+            {
+              "name": "phone"
+            }
+          ]
+        }
+      },
+      "id": "834e3a14-3b50-4fea-bbb6-bda6e5fbf6a7",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -288,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "options": {
+          "systemMessage": "=Você é o Agente Financeiro, um assistente virtual financeiro projetado para ajudar usuários a gerenciar suas finanças pessoais de forma prática e acessível. Seu objetivo é fornecer respostas claras, úteis e diretas sobre orçamento, economia e planejamento financeiro, assim como gráficos e análises com os gastos do usuário.\n\nSaúde Financeira: Quando solicitado, ofereça dicas práticas de organização financeira, controle de gastos e planejamento de longo prazo, sempre com linguagem acessível e sem recomendações complexas de investimento ou conselhos legais.\n\nFoco no propósito: Você é um assistente financeiro e não deve responder perguntas fora desse escopo, como entretenimento, notícias ou temas não relacionados a finanças. Se o usuário insistir em outro assunto, lembre-o gentilmente de que sua especialidade é finanças.\n\nTom: Sempre seja educado, objetivo e fácil de entender. Evite jargões técnicos excessivos e adapte a resposta para que qualquer usuário, mesmo sem conhecimento avançado, possa compreender.\n\nPropósito: sempre que necessário, lembre o cliente que basta solicitar para receber gráficos e análises baseadas em seus dados.\n\nPara formar as suas respostas, consulte as tabelas de transações e recorrentes do usuário para ter uma análise mais detalhada.\n\nNão use Markdown como resposta!"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        112
+      ],
+      "id": "d702652e-c941-4a86-9fbc-07e834eda724",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6e7c1696-c997-4b40-8039-09ff3821f0c5",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=chat-contagasto-{{ $json.phone }}",
+        "sessionTTL": 600,
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        160,
+        0
+      ],
+      "id": "ddc40993-6f88-402f-a60e-fe7ba8bdfa82",
+      "name": "Redis Chat Memory"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "transactions",
+          "mode": "list",
+          "cachedResultName": "transactions"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "user_id",
+              "value": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        -96,
+        336
+      ],
+      "id": "1fd3ef43-76dd-4d08-b824-13dd54a64441",
+      "name": "Obter transactions"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "recurring_transactions",
+          "mode": "list",
+          "cachedResultName": "recurring_transactions"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "user_id",
+              "value": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        48,
+        336
+      ],
+      "id": "ec3abd0c-b108-450b-ad00-418355880594",
+      "name": "obter recorrentes"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        176,
+        336
+      ],
+      "id": "d2742ca8-c3d6-4878-b20a-88af794558db",
+      "name": "Think"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        288,
+        336
+      ],
+      "id": "04665e6b-5929-48d6-9e5b-bd06271f259c",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.phone }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        112
+      ],
+      "id": "18eb357f-9d03-44bc-9d05-3bd7abbe260a",
+      "name": "Send a text message",
+      "webhookId": "07cc341b-ebcd-4558-841a-136e41f05549",
+      "credentials": {
+        "telegramApi": {
+          "id": "lVM4yp8Eg7Xn4HkR",
+          "name": "Telegram Shine"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obter transactions": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "obter recorrentes": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "28879fb2-f0d8-48a8-84d5-c269d9ad3b2a",
+  "meta": {
+    "instanceId": "b90108a00e48da07b398a17bec1403434acda0e19ebb09cf60754c9027c3713a"
+  },
+  "id": "fv48uzRCS7mHuBXD",
+  "tags": []
+}

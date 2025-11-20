@@ -1,0 +1,416 @@
+{
+  "name": "Agente Financeiro | Crons",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -192,
+        240
+      ],
+      "id": "7bbd22ab-3220-4982-904e-6ff966e878e5",
+      "name": "Cron Reminders"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "reminders",
+          "mode": "list",
+          "cachedResultName": "reminders"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_sent": true,
+            "id": "={{ $('Busca lembrete por minuto').item.json.id }}",
+            "sent_at": "={{ $now }}",
+            "updated_at": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "reminder_date",
+              "displayName": "reminder_date",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "is_sent",
+              "displayName": "is_sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sent_at",
+              "displayName": "sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "origin",
+              "displayName": "origin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        640,
+        240
+      ],
+      "id": "e66c82a2-ea97-4072-8a1b-65dad7748fa1",
+      "name": "Atualiza lembrete"
+    },
+    {
+      "parameters": {
+        "content": "## Enviar lembretes",
+        "height": 240,
+        "width": 1104
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -256,
+        176
+      ],
+      "typeVersion": 1,
+      "id": "b578b971-5aca-462b-a4c9-291cc4782c2f",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 3
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -192,
+        528
+      ],
+      "id": "3196bc73-0085-49b8-add3-cd7ac1de8691",
+      "name": "Cron Transactions"
+    },
+    {
+      "parameters": {
+        "content": "## Adicionar parcela do recorrente aos transactions e atualiza recorrente",
+        "height": 240,
+        "width": 912,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -256,
+        448
+      ],
+      "typeVersion": 1,
+      "id": "ab9628db-40e9-4aca-89b0-bb4878c67fd9",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO transactions (user_id, category_id, recurring_transaction_id, amount, type, description, transaction_date, auto_generated)\nSELECT \n  user_id, category_id, id, amount, type, description, next_due_date, TRUE\nFROM recurring_transactions\nWHERE next_due_date <= CURRENT_DATE\n  AND (end_date IS NULL OR end_date >= CURRENT_DATE);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        16,
+        528
+      ],
+      "id": "103f789f-0f25-4b56-9818-7508bdf9affd",
+      "name": "Insere transaction"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE recurring_transactions\nSET last_generated = CURRENT_DATE,\n    next_due_date = \n      CASE \n        WHEN frequency = 'weekly' THEN next_due_date + INTERVAL '7 days'\n        WHEN frequency = 'monthly' THEN next_due_date + INTERVAL '1 month'\n        WHEN frequency = 'yearly' THEN next_due_date + INTERVAL '1 year'\n      END\nWHERE next_due_date <= CURRENT_DATE;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        224,
+        528
+      ],
+      "id": "0e09499c-db5b-4af8-9d9c-8b18edc8006b",
+      "name": "Atualiza recorrente"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "reminders",
+          "mode": "list",
+          "cachedResultName": "reminders"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "reminder_date",
+              "value": "={{ $now.format('yyyy-MM-dd') }} {{ $now.hour }}:{{ $now.minute }}:00"
+            },
+            {
+              "column": "is_sent",
+              "value": "false"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        16,
+        240
+      ],
+      "id": "2fd0dfb5-6e78-4af1-baa8-ebfd2916f8d2",
+      "name": "Busca lembrete por minuto"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "users",
+          "mode": "list",
+          "cachedResultName": "users"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.user_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        224,
+        240
+      ],
+      "id": "7d6fe3d7-ee4c-4935-82c2-ac919aea3378",
+      "name": "Busca telefone usuario"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.phone }}",
+        "text": "=⏰ *Lembrete!*\n{{ $('Busca lembrete por minuto').item.json.title }}\n{{ $('Busca lembrete por minuto').item.json.description }}!",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        432,
+        240
+      ],
+      "id": "1dae066c-f2d8-4cec-85a8-e7935f96f8a4",
+      "name": "Send a text message",
+      "webhookId": "46cf145e-67ba-4964-b257-0b99643ecac7",
+      "credentials": {
+        "telegramApi": {
+          "id": "lVM4yp8Eg7Xn4HkR",
+          "name": "Telegram Shine"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cron Reminders": {
+      "main": [
+        [
+          {
+            "node": "Busca lembrete por minuto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cron Transactions": {
+      "main": [
+        [
+          {
+            "node": "Insere transaction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insere transaction": {
+      "main": [
+        [
+          {
+            "node": "Atualiza recorrente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca lembrete por minuto": {
+      "main": [
+        [
+          {
+            "node": "Busca telefone usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca telefone usuario": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Atualiza lembrete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a538e650-4432-4d33-b00d-39e270b398dd",
+  "meta": {
+    "instanceId": "b90108a00e48da07b398a17bec1403434acda0e19ebb09cf60754c9027c3713a"
+  },
+  "id": "Yos7Ws8jCaHlfwlA",
+  "tags": []
+}

@@ -1,0 +1,545 @@
+{
+  "name": "Agente Financeiro | Reminders",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "userId"
+            },
+            {
+              "name": "message"
+            },
+            {
+              "name": "phone"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -240,
+        128
+      ],
+      "id": "ad40495b-13b4-4df1-abfd-9ec2f201500d",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=chat-contagasto-{{ $json.phone }}",
+        "sessionTTL": 600,
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        176,
+        0
+      ],
+      "id": "9bde2709-c8a7-49c5-b2fd-4b088999789d",
+      "name": "Redis Chat Memory"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"title\": \"Título breve do lembrete\",\n  \"description\": \"Descrição completa do lembrete\",\n  \"reminder_date\": \"2025-11-10T10:00:00Z\",\n  \"is_sent\": false,\n  \"origin\": \"manual\",\n  \"created_at\": \"2025-10-21T12:00:00Z\",\n  \"updated_at\": \"2025-10-21T12:00:00Z\"\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        304
+      ],
+      "id": "bf5a16dc-d0d7-4413-8d9d-af959391ae06",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ef907609-0d36-4193-8caf-18e584411909",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b747153e-4ecc-4c12-b9e6-cde0bf8a4f9b",
+              "leftValue": "={{ $('Reminder Agent').item.json.output.title }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "feed1b86-22bc-4335-8133-92cfdf52b39a",
+              "leftValue": "={{ $('Reminder Agent').item.json.output.description }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "2545b516-3dae-4301-bec8-aa023742e893",
+              "leftValue": "={{ $json.reminder_date }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        128
+      ],
+      "id": "e24c6919-902a-49ac-8890-22481729363f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "messages",
+          "mode": "list",
+          "cachedResultName": "messages"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('When Executed by Another Workflow').item.json.userId }}",
+            "message": "=",
+            "direction": "out",
+            "created_at": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "direction",
+              "displayName": "direction",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1184,
+        224
+      ],
+      "id": "d823121e-67c4-4d60-b8d8-c07d3e8fd14b",
+      "name": "Registra resposta"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=<Persona>\nAtue como o Agente de Lembretes do sistema Agente Financeiro, um assistente pessoal inteligente capaz de interpretar mensagens naturais (de texto ou áudio) e transformá-las em lembretes estruturados.\nVocê é direto, compreende linguagem cotidiana (“me lembra de...”, “anota uma reunião...”, “avisar amanhã”, “terça às 10h”, “em 2 dias”).\nNão responda o usuário — apenas retorne os dados extraídos em formato JSON válido e legível por automação.\n</Persona>\n\n<Horario>\nAgora é {{ $now }}\n</Horario>\n\n<Roteiro>\nAnalise a mensagem recebida.\n\nIdentifique e extraia os seguintes campos:\n\ntitle → nome curto do lembrete (ex: “reunião”, “pagar aluguel”, “ligar para cliente”).\n\ndescription → explicação mais completa da tarefa (ex: “reunião com João às 10h”).\n\nreminder_date → data e hora em que o lembrete deve ocorrer, pegue a data e fuso horario correto usando a tool \"Data e Fuso Horario\", o fuso deve ser America/Sao_Paulo, ou seja, UTC-3.\n\nInterprete expressões relativas (“amanhã”, “segunda”, “daqui 3 dias”, “às 14h”).\n\nSe o horário não for especificado, defina reminder_date como o início do dia (ex: 09:00).\n\nis_sent → sempre false no momento da criação.\n\norigin → sempre \"manual\".\n\ncreated_at → data/hora atual ({{ $now }}).\n\nupdated_at → data/hora atual ({{ $now }}).\n\nCaso algum campo não possa ser identificado, defina como null.\n\nRetorne o resultado final no formato JSON indicado abaixo.\n</Roteiro>\n\n<Objetivo>\nInterpretar corretamente pedidos de lembrete em linguagem natural e gerar um registro estruturado pronto para ser salvo na tabela reminders.\nO sucesso é medido pela precisão da data/hora (reminder_date) e clareza do título e descrição, com acerto mínimo de 90% sem intervenção humana.\n</Objetivo>\n\n<Modelo>\nRetorne apenas no formato JSON abaixo:\n\n{\n  \"title\": \"Título breve do lembrete\",\n  \"description\": \"Descrição completa da tarefa\",\n  \"reminder_date\": \"2025-11-10T10:00:00Z\",\n  \"is_sent\": false,\n  \"origin\": \"manual\",\n  \"created_at\": \"2025-10-21T12:00:00Z\",\n  \"updated_at\": \"2025-10-21T12:00:00Z\"\n}\n\n\n<Panorama>\nO sistema Conta Gasto permite ao usuário criar lembretes de compromissos, pagamentos ou tarefas pessoais via WhatsApp.\nEsse agente processa mensagens como:\n\n“Me lembra de pagar o aluguel amanhã às 9h.”\n\n“Anota uma reunião com o time na sexta-feira.”\n\n“Ligar para o contador em 3 dias.”\n\nEle extrai data, horário e contexto da mensagem e gera uma linha de lembrete pronta para inserção na tabela reminders no PostgreSQL.\n\n<Regras>\n\nRetorne somente JSON puro, sem texto adicional.\n\nSe não houver horário explícito, defina como 09:00 do dia detectado.\n\nSempre converta a data e hora para formato ISO 8601 UTC (YYYY-MM-DDTHH:mm:ssZ).\n\nO JSON deve ser parseável e completo, mesmo que alguns campos estejam null.\n\nCaso o horário naquele dia já tenha passado insira no dia seguinte\n</Modelo>\n\n<Exemplos>\nEntrada:\n“Me lembra de pagar a conta de luz amanhã às 8h.”\nSaída:\n\n{\n  \"title\": \"Pagar conta de luz\",\n  \"description\": \"Lembrete para pagar a conta de luz\",\n  \"reminder_date\": \"2025-10-22T08:00:00\",\n  \"is_sent\": false,\n  \"origin\": \"manual\",\n  \"created_at\": \"2025-10-21T12:00:00\",\n  \"updated_at\": \"2025-10-21T12:00:00\"\n}\n\n\nEntrada:\n“Anota uma reunião com o João segunda às 10h.”\nSaída:\n\n{\n  \"title\": \"Reunião com João\",\n  \"description\": \"Reunião com João segunda às 10h\",\n  \"reminder_date\": \"2025-10-27T10:00:00\",\n  \"is_sent\": false,\n  \"origin\": \"manual\",\n  \"created_at\": \"2025-10-21T12:00:00\",\n  \"updated_at\": \"2025-10-21T12:00:00\"\n}\n\n\nEntrada:\n“Me lembra de enviar o relatório em 3 dias.”\nSaída:\n\n{\n  \"title\": \"Enviar relatório\",\n  \"description\": \"Lembrete para enviar o relatório\",\n  \"reminder_date\": \"2025-10-24T09:00:00\",\n  \"is_sent\": false,\n  \"origin\": \"manual\",\n  \"created_at\": \"2025-10-21T12:00:00\",\n  \"updated_at\": \"2025-10-21T12:00:00\"\n</Exemplos>\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        128
+      ],
+      "id": "ffacef49-d9a3-4ca6-a05b-495b674056c3",
+      "name": "Reminder Agent"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "reminders",
+          "mode": "list",
+          "cachedResultName": "reminders"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_sent": false,
+            "user_id": "={{ $('When Executed by Another Workflow').item.json.userId }}",
+            "title": "={{ $('Reminder Agent').item.json.output.title }}",
+            "description": "={{ $('Reminder Agent').item.json.output.description }}",
+            "reminder_date": "={{ $('Corrige Fuso Horario').item.json.reminder_date }}",
+            "origin": "={{ $('Reminder Agent').item.json.output.origin }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reminder_date",
+              "displayName": "reminder_date",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_sent",
+              "displayName": "is_sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sent_at",
+              "displayName": "sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "origin",
+              "displayName": "origin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        768,
+        224
+      ],
+      "id": "07e4b010-5156-431e-bf39-4cf7eea84866",
+      "name": "Insere Lembrete"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function node (n8n) — Corrige reminder_date para fuso horário de São Paulo (UTC-3)\n\n// Importa objeto de entrada (do agente)\nconst item = items[0].json;\n\n// Data retornada pelo agente (exemplo: \"2025-10-27T18:00:00Z\")\nconst agentDate = $input.first().json.output.reminder_date;\n\n// Fuso fixo (São Paulo)\nconst timezoneOffset = -3; // UTC-3 (sem horário de verão)\n\n// Função auxiliar\nfunction convertToSaoPaulo(dateStr) {\n  if (!dateStr) return null;\n\n  // Converte a data de entrada para um objeto Date\n  const dateObj = new Date(dateStr);\n\n  if (isNaN(dateObj.getTime())) {\n    throw new Error(`Data inválida: ${dateStr}`);\n  }\n\n  // Ajusta o horário subtraindo o offset (3 horas)\n  const localMillis = dateObj.getTime() + timezoneOffset * 60 * 60 * 1000;\n\n  // Cria nova data corrigida\n  const localDate = new Date(localMillis);\n\n  // Retorna em formato ISO sem 'Z' (representa horário local)\n  const isoLocal = localDate.toISOString().replace('Z', '');\n\n  return isoLocal;\n}\n\nlet correctedDate;\n\ntry {\n  correctedDate = convertToSaoPaulo(agentDate);\n} catch (err) {\n  correctedDate = null;\n  console.error('Erro ao converter data:', err.message);\n}\n\n// Monta o JSON final para saída\nreturn [\n  {\n    json: {\n      //...item,\n      reminder_date: correctedDate, // já corrigido para horário de São Paulo\n      //reminder_date_original: agentDate // opcional, para referência\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        128
+      ],
+      "id": "484f302e-a830-41ee-8c9e-1c55e533d1f5",
+      "name": "Corrige Fuso Horario"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.phone }}",
+        "text": "=Não consegui inserir esse lembrete.\n\nEstá faltando informações",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        784,
+        16
+      ],
+      "id": "52b30adb-40b9-43a3-ade5-f6fd235e62e0",
+      "name": "Send a text message",
+      "webhookId": "c83bfb73-767a-478a-b11f-878a0a8f8766",
+      "credentials": {
+        "telegramApi": {
+          "id": "lVM4yp8Eg7Xn4HkR",
+          "name": "Telegram Shine"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.phone }}",
+        "text": "=*Lembrete criado*\nConteúdo: *{{ $json.title }}*\nAgendado para: _{{ $('If').item.json.reminder_date.toDateTime().format('dd/MM/yyyy') }}_ às {{ $('If').item.json.reminder_date.toDateTime().format('HH:mm') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        976,
+        224
+      ],
+      "id": "ff84f53d-03bc-4615-9df9-bdb3d87ef3e8",
+      "name": "Send a text message1",
+      "webhookId": "c83bfb73-767a-478a-b11f-878a0a8f8766",
+      "credentials": {
+        "telegramApi": {
+          "id": "lVM4yp8Eg7Xn4HkR",
+          "name": "Telegram Shine"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Reminder Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Reminder Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Reminder Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insere Lembrete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Reminder Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reminder Agent": {
+      "main": [
+        [
+          {
+            "node": "Corrige Fuso Horario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insere Lembrete": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Corrige Fuso Horario": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message1": {
+      "main": [
+        [
+          {
+            "node": "Registra resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "882db443-b835-4131-8a87-40a931926074",
+  "meta": {
+    "instanceId": "b90108a00e48da07b398a17bec1403434acda0e19ebb09cf60754c9027c3713a"
+  },
+  "id": "Uy9O142ZKnYucY4u",
+  "tags": []
+}

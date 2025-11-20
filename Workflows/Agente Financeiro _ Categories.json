@@ -1,0 +1,524 @@
+{
+  "name": "Agente Financeiro | Categories",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "intent"
+            },
+            {
+              "name": "userId"
+            },
+            {
+              "name": "message"
+            },
+            {
+              "name": "phone"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        128
+      ],
+      "id": "636e013b-bfbe-44df-9aa2-50ecc9f13845",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=<Persona>\nAtue como o Agente de Criação de Categorias do sistema de Agente Financeiro.\nVocê é responsável por analisar o pedido do usuário e decidir se uma nova categoria deve ser criada ou se ela já existe.\nVocê entende linguagem natural e identifica corretamente nomes de categorias, mesmo com variações de escrita.\nNão responda o usuário — apenas retorne dados estruturados em JSON.\n</Persona>\n\n<Roteiro>\n1. Analise a mensagem recebida do usuário, que representa o nome da categoria que ele deseja criar.\n2. Use a tool \"Consulta Categorias\" para buscar no banco de dados as categorias existentes do usuário.\n3. Compare o nome solicitado com as categorias já existentes (use correspondência semântica e por similaridade textual, considerando acentos, plural/singular e pequenas variações).\n4. Retorne:\n   - Se já existe uma categoria semelhante: \n     { \"existe\": \"sim\", \"nome\": \"nome_da_categoria_existente\" }\n   - Se não existe: \n     { \"existe\": \"nao\", \"nome\": \"nome_da_categoria_nova\" }\n</Roteiro>\n\n<Objetivo>\nGarantir que o sistema não crie categorias duplicadas e mantenha a base de dados organizada.\nA precisão mínima esperada na detecção de categorias semelhantes é 90%.\n</Objetivo>\n\n<Panorama>\nO sistema Conta Gasto permite que cada usuário crie suas próprias categorias de gastos e receitas.\nAntes de criar uma nova categoria, é necessário verificar se ela já existe para o mesmo usuário.\nA tool \"Consulta Categorias\" retorna todas as categorias vinculadas ao user_id atual.\n</Panorama>\n\n<Modelo>\nRetorne APENAS JSON no formato:\n{\n  \"existe\": \"sim\" | \"nao\",\n  \"nome\": \"string\"\n}\n</Modelo>\n\n<Regras>\n- Não adicione explicações ou texto fora do JSON.\n- Utilize comparação semântica leve (ex: \"Mercado\" ≈ \"Supermercado\").\n- Sempre normalize o texto (minúsculas, sem acentos) antes de comparar.\n- Caso haja dúvida, prefira indicar \"existe\": \"nao\" e deixar o sistema criar a nova categoria.\n</Regras>\n\n<Tools>\n- Consulta Categorias\n</Tools>"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        128
+      ],
+      "id": "d21be770-b325-4658-8e5c-7d3a4f785b76",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "52b784cc-cdaf-4914-8559-d4c9cb82722a",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=chat-contagasto-{{ $json.phone }}",
+        "sessionTTL": 600,
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        160,
+        0
+      ],
+      "id": "9277c600-4252-44d9-b991-6b0224d3a66e",
+      "name": "Redis Chat Memory"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "categories",
+          "mode": "list",
+          "cachedResultName": "categories"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "user_id",
+              "value": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        48,
+        320
+      ],
+      "id": "1131ef7c-2a18-4f5b-8627-32013898bee8",
+      "name": "Consulta Categorias"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"existe\": \"sim | nao\",\n\t\"nome\": \"sapatos\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        320
+      ],
+      "id": "7d4c574d-ad57-41d9-be0b-2a08f2ae14aa",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.existe }}",
+                    "rightValue": "sim",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "2b99b8a5-73bc-46e3-8f98-717a15076ac6"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Existe"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "25aa8a1a-f30a-4825-82ed-ace887bd3883",
+                    "leftValue": "={{ $json.output.existe }}",
+                    "rightValue": "nao",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Nao existe"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        352,
+        128
+      ],
+      "id": "03229022-9f69-4c64-8a5d-bdd24bab2942",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "categories",
+          "mode": "list",
+          "cachedResultName": "categories"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('When Executed by Another Workflow').item.json.userId }}",
+            "created_at": "={{ $now }}",
+            "name": "={{ $('AI Agent').item.json.output.nome }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        592,
+        224
+      ],
+      "id": "aa8e7ca4-954f-4b7e-902d-be1ff8c9cecc",
+      "name": "Cria categoria"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "messages",
+          "mode": "list",
+          "cachedResultName": "messages"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('When Executed by Another Workflow').item.json.userId }}",
+            "message": "=",
+            "direction": "out",
+            "created_at": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "direction",
+              "displayName": "direction",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        992,
+        224
+      ],
+      "id": "14a8e003-563f-4891-b3c2-15dbf887937e",
+      "name": "Registra resposta"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.phone }}",
+        "text": "=Não consegui inserir essa categoria pois ela já existe.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        48
+      ],
+      "id": "602febae-722b-4333-81cb-e554cc96545d",
+      "name": "Send a text message",
+      "webhookId": "b6e02e91-054c-4499-8d04-93e560696c94",
+      "credentials": {
+        "telegramApi": {
+          "id": "lVM4yp8Eg7Xn4HkR",
+          "name": "Telegram Shine"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.phone }}",
+        "text": "=*Categoria* criada!\nNome da categoria: {{ $json.name }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        800,
+        224
+      ],
+      "id": "5e72e025-2469-4f73-bc78-3545e3ebf7d1",
+      "name": "Send a text message1",
+      "webhookId": "b6e02e91-054c-4499-8d04-93e560696c94",
+      "credentials": {
+        "telegramApi": {
+          "id": "lVM4yp8Eg7Xn4HkR",
+          "name": "Telegram Shine"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta Categorias": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cria categoria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cria categoria": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message1": {
+      "main": [
+        [
+          {
+            "node": "Registra resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6b81f456-0c1a-4620-b3ed-d6ed06ef14f1",
+  "meta": {
+    "instanceId": "b90108a00e48da07b398a17bec1403434acda0e19ebb09cf60754c9027c3713a"
+  },
+  "id": "aOZT7l1zEcoBHonB",
+  "tags": []
+}

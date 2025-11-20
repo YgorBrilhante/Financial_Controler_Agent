@@ -1,0 +1,1360 @@
+{
+  "name": "AgenteFinanceiro | Main",
+  "nodes": [
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1056,
+        256
+      ],
+      "id": "90a76a73-d31c-4b3d-94ac-622dd0c1abc3",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "messages",
+          "mode": "list",
+          "cachedResultName": "messages"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('Telegram Trigger').item.json.from.id }}",
+            "message": "={{ $json.message }}",
+            "direction": "in",
+            "created_at": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "direction",
+              "displayName": "direction",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -864,
+        272
+      ],
+      "id": "7f3c63e4-658e-4d92-8218-6769898cd6da",
+      "name": "Registra mensagem usuario"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "O que há nessa imagem?",
+        "inputType": "base64",
+        "options": {
+          "detail": "auto"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -1936,
+        448
+      ],
+      "id": "3fb4751f-e6af-4712-9511-f695faac5612",
+      "name": "Analisa imagem",
+      "credentials": {
+        "openAiApi": {
+          "id": "G5xBjX1yCJoTaYUh",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -1936,
+        272
+      ],
+      "id": "30a055fa-d380-471a-ab25-fd2681e09db4",
+      "name": "Transcrever audio",
+      "credentials": {
+        "openAiApi": {
+          "id": "G5xBjX1yCJoTaYUh",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "52da170a-e1f9-421a-acf7-9d27024a09f5",
+              "name": "message",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1296,
+        272
+      ],
+      "id": "7ddaa50d-5851-4204-ae38-de8d8754c62b",
+      "name": "Envio texto voz"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "15726365-26b5-49f5-bb3c-06f8a8646a26",
+              "name": "message",
+              "value": "=User image description: {{ $json.content }}\n\nUser image caption: {{ $('WhatsApp Trigger1').item.json.messages[0].image.caption }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1296,
+        448
+      ],
+      "id": "d24b4098-20fd-42ff-89ba-4a2defe35e3e",
+      "name": "Prompt da imagem"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e8df7597-8bb6-49d9-b54e-cbc6d321ec25",
+              "name": "message",
+              "value": "={{ $('Message append1').item.json.mensagemFinal }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1296,
+        96
+      ],
+      "id": "026bf8ac-5650-4b58-a635-fd99b50e4b84",
+      "name": "Envio texto"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "783ea485-0c2d-4bd1-b96f-90404e349d21",
+              "name": "message.text.body",
+              "value": "={{ $('Dados').item.json.message.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2480,
+        112
+      ],
+      "id": "bf00467a-a5a1-4ddf-ab0f-da973cc37709",
+      "name": "Text Message1"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "=buffer-{{ $('Dados').item.json.phone }}",
+        "messageData": "={{ $json.message.text.body }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -2320,
+        112
+      ],
+      "id": "a1c8cd8e-3827-4345-a484-758572f11c53",
+      "name": "Message list1"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -2160,
+        112
+      ],
+      "id": "428fae63-669d-4ac6-ba6f-e6b1aae5f8f4",
+      "name": "Wait message list1",
+      "webhookId": "23aef9ad-8820-4637-ab83-e507df4c2aca"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0e516ec7-73df-4a93-a932-d63209aff1bd",
+              "leftValue": "={{ $json.mensagem.last() }}",
+              "rightValue": "={{ $('Text Message1').item.json.message.text.body }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1856,
+        112
+      ],
+      "id": "963d5ea3-9a64-45ff-9962-84fec13bbda6",
+      "name": "If3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1680,
+        -48
+      ],
+      "id": "2da309fa-c85a-4f75-9313-a5f02449d534",
+      "name": "No Operation, do nothing5"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "mensagem",
+        "key": "=buffer-{{ $('Dados').item.json.phone }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -2000,
+        112
+      ],
+      "id": "317af03d-823a-447d-94cd-6e3fe8337f21",
+      "name": "Get message list1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0948b6f2-4f96-47e7-b08f-2dbe8edecc57",
+              "name": "mensagemFinal",
+              "value": "={{ $('Get message list1').item.json.mensagem.join('\\n') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1680,
+        96
+      ],
+      "id": "bbf3c639-e4b9-4701-936e-09b677657875",
+      "name": "Message append1"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "=buffer-{{ $('Dados').item.json.phone }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -1520,
+        96
+      ],
+      "id": "71f401a4-c4fb-4eb5-a861-f4258b4bebe2",
+      "name": "Delete buffer1"
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $('Merge').item.json.message }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "transaction",
+              "description": "quando a mensagem do usuário indicar o registro, consulta ou edição de uma transação financeira — como gastos, ganhos, receitas ou despesas. "
+            },
+            {
+              "category": "reminder",
+              "description": "=quando o usuário pedir para criar, listar ou excluir um lembrete de tarefa, compromisso, conta ou pagamento."
+            },
+            {
+              "category": "chart",
+              "description": "quando o usuario solicitar um grafico para visualizacao de dados"
+            },
+            {
+              "category": "Consulta",
+              "description": "quando o usuário quiser apenas fazer uma consulta sobre qualquer informação, sem criar, apagar um atualizar nada, apenas informativo"
+            },
+            {
+              "category": "Categories",
+              "description": "quando o usuario tiver a intenção de adicionar uma nova categoria"
+            },
+            {
+              "category": "Insights",
+              "description": "quando o usuário tiver a intenção de saber mais informações sobre dicas, estratégias financeiras, análises ou perguntas financeiras"
+            }
+          ]
+        },
+        "options": {
+          "fallback": "other"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        -656,
+        192
+      ],
+      "id": "cb90818c-cb2f-41d5-835e-e7b464c1776b",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -656,
+        528
+      ],
+      "id": "796217e5-c1ee-4cdf-ae38-cba26a08e528",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "G5xBjX1yCJoTaYUh",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -3136,
+        272
+      ],
+      "id": "ecd34776-9d06-4ef7-b55b-bf7ca96b03b3",
+      "name": "Telegram Trigger",
+      "webhookId": "ab7b7bf5-0886-41cb-9475-5e95ad493b2f",
+      "credentials": {
+        "telegramApi": {
+          "id": "lVM4yp8Eg7Xn4HkR",
+          "name": "Telegram Shine"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0208d357-0f90-4c8d-985f-ec59c4537668",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ce34e582-2562-4c81-a7e6-126eac6cc585",
+                    "leftValue": "={{ $json.message.voice.file_id }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7b521cb4-456c-4171-aa5c-0b7c8ce18583",
+                    "leftValue": "={{ $json.message.photo[2].file_id }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Imagem"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -2928,
+        256
+      ],
+      "id": "64e8d1da-11d2-4b5e-a3af-5ebb63504dbb",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {
+          "mimeType": "audio/ogg"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2656,
+        272
+      ],
+      "id": "f4c52af5-e368-4302-8714-f073cceca509",
+      "name": "Get a file",
+      "webhookId": "6e9436ec-5d1c-4eda-866a-0961c098b8e7",
+      "credentials": {
+        "telegramApi": {
+          "id": "RfAy3ie9Ap1H9v9F",
+          "name": "Financeiro Shine Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo[1].file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2656,
+        448
+      ],
+      "id": "e14cc896-474a-4399-afeb-a2455efb7ac5",
+      "name": "Get a file1",
+      "webhookId": "6e9436ec-5d1c-4eda-866a-0961c098b8e7",
+      "credentials": {
+        "telegramApi": {
+          "id": "RfAy3ie9Ap1H9v9F",
+          "name": "Financeiro Shine Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "783ea485-0c2d-4bd1-b96f-90404e349d21",
+              "name": "message.text.body",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2656,
+        112
+      ],
+      "id": "519ad16d-f530-4a6b-ba82-83ef69ff312a",
+      "name": "Text Message"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.chat.id }}",
+        "text": "=Bem-vindo ao *Agente Financeiro*! 💸\n\nAqui você controla seus gastos de forma rápida e inteligente. Veja como é fácil:\n\n💳 Informe qualquer gasto — Exemplo: \"Gastei R$ 100 no mercado\" ou \"Gastei 250 de aluguel\".\n\n💡 Posso fazer tudo por você — Entendo o valor, organizo automaticamente em categorias (alimentação 🛒, moradia 🏠, etc.) e atualizo seu controle.\n\nSe quiser dicas sobre como organizar suas finanças ou sugestões de controle de gastos, é só me avisar!",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -112,
+        992
+      ],
+      "id": "986676e5-1d13-4eed-8899-5efd68acbe11",
+      "name": "Fallback Message",
+      "webhookId": "000aebf6-126f-43b1-90e5-91b7830d7f46",
+      "credentials": {
+        "telegramApi": {
+          "id": "lVM4yp8Eg7Xn4HkR",
+          "name": "Telegram Shine"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "PhK2JIbunja8ntVd",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/PhK2JIbunja8ntVd",
+          "cachedResultName": "Agente Financeiro | Transaction"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "message": "={{ $('Merge').item.json.message }}",
+            "phone": "={{ $('Telegram Trigger').item.json.chat.id }}",
+            "userId": "={{ $('Telegram Trigger').item.json.from.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "intent",
+              "displayName": "intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            },
+            {
+              "id": "userId",
+              "displayName": "userId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -128,
+        -208
+      ],
+      "id": "54276f9c-a337-43d9-90a8-6b230d00cca9",
+      "name": "Call 'Agente Financeiro | Transaction'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Uy9O142ZKnYucY4u",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/Uy9O142ZKnYucY4u",
+          "cachedResultName": "Agente Financeiro | Reminders"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "message": "={{ $('Merge').item.json.message }}",
+            "phone": "={{ $('Telegram Trigger').item.json.chat.id }}",
+            "userId": "={{ $('Telegram Trigger').item.json.from.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "userId",
+              "displayName": "userId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -128,
+        -16
+      ],
+      "id": "ba52f069-7079-48e8-9654-9c5cbbe0e0b2",
+      "name": "Call 'Agente Financeiro | Reminders'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "jFGfeAY3CpzvU2hO",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/jFGfeAY3CpzvU2hO",
+          "cachedResultName": "Agente Financeiro | Charts"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "userId": "={{ $('Telegram Trigger').item.json.from.id }}",
+            "message": "={{ $('Merge').item.json.message }}",
+            "phone": "={{ $('Telegram Trigger').item.json.chat.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "userId",
+              "displayName": "userId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -128,
+        176
+      ],
+      "id": "14f24110-dca0-4434-aca9-0711d5059eb6",
+      "name": "Call 'Agente Financeiro | Charts'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "fvsRqfk27baGgn5D",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/fvsRqfk27baGgn5D",
+          "cachedResultName": "Agente Financeiro | Consultas"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "userId": "={{ $('Telegram Trigger').item.json.from.id }}",
+            "message": "={{ $('Merge').item.json.message }}",
+            "phone": "={{ $('Telegram Trigger').item.json.chat.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "userId",
+              "displayName": "userId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -128,
+        368
+      ],
+      "id": "d70cfba5-5739-43a9-b7d6-6a79fb11c170",
+      "name": "Call 'Agente Financeiro | Consultas'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "aOZT7l1zEcoBHonB",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/aOZT7l1zEcoBHonB",
+          "cachedResultName": "Agente Financeiro | Categories"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "userId": "={{ $('Telegram Trigger').item.json.from.id }}",
+            "message": "={{ $('Merge').item.json.message }}",
+            "phone": "={{ $('Telegram Trigger').item.json.chat.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "intent",
+              "displayName": "intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            },
+            {
+              "id": "userId",
+              "displayName": "userId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -112,
+        576
+      ],
+      "id": "b64ba5bf-fc09-4aab-84d7-890d15713aef",
+      "name": "Call 'Agente Financeiro | Categories'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "fv48uzRCS7mHuBXD",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/fv48uzRCS7mHuBXD",
+          "cachedResultName": "Agente Financeiro | Insights"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "message": "={{ $('Merge').item.json.message }}",
+            "userId": "={{ $('Telegram Trigger').item.json.from.id }}",
+            "phone": "={{ $('Telegram Trigger').item.json.chat.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "userId",
+              "displayName": "userId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -112,
+        784
+      ],
+      "id": "d1226b46-ea69-4fc7-99bd-ffea9796b8f3",
+      "name": "Call 'Agente Financeiro | Insights'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Registra mensagem usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registra mensagem usuario": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analisa imagem": {
+      "main": [
+        [
+          {
+            "node": "Prompt da imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcrever audio": {
+      "main": [
+        [
+          {
+            "node": "Envio texto voz",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envio texto voz": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Prompt da imagem": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Envio texto": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Message1": {
+      "main": [
+        [
+          {
+            "node": "Message list1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message list1": {
+      "main": [
+        [
+          {
+            "node": "Wait message list1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait message list1": {
+      "main": [
+        [
+          {
+            "node": "Get message list1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Message append1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get message list1": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message append1": {
+      "main": [
+        [
+          {
+            "node": "Delete buffer1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete buffer1": {
+      "main": [
+        [
+          {
+            "node": "Envio texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "Call 'Agente Financeiro | Transaction'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Agente Financeiro | Reminders'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Agente Financeiro | Charts'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Agente Financeiro | Consultas'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Agente Financeiro | Categories'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Agente Financeiro | Insights'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fallback Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Text Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file1": {
+      "main": [
+        [
+          {
+            "node": "Analisa imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Transcrever audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Message": {
+      "main": [
+        [
+          {
+            "node": "Text Message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0650d244-5bec-4216-86c8-f53ac3193953",
+  "meta": {
+    "instanceId": "b90108a00e48da07b398a17bec1403434acda0e19ebb09cf60754c9027c3713a"
+  },
+  "id": "PNB5GEfNHIjN5jZb",
+  "tags": []
+}

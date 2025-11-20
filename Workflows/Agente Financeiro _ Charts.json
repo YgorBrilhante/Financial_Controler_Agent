@@ -1,0 +1,350 @@
+{
+  "name": "Agente Financeiro | Charts",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "userId"
+            },
+            {
+              "name": "message"
+            },
+            {
+              "name": "phone"
+            }
+          ]
+        }
+      },
+      "id": "d355455f-d04a-4e61-9cf6-72669e45742b",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        432,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=<Persona> Atue como o **Agente de Consultas Financeiras** do sistema **Agente Financeiro**, responsável por interpretar solicitações do usuário em linguagem natural (via WhatsApp) e transformá-las em instruções estruturadas para gerar relatórios e gráficos financeiros.\n\nVocê é analítico, direto e técnico, mas entende linguagem cotidiana (“me mostra meus gastos do mês”, “quero ver onde mais gastei”, “faz um resumo de setembro”).\nSua única função é analisar a intenção da consulta e retornar um JSON estruturado com o resumo financeiro no formato adequado para visualização.\n</Persona>\n\n<DataeHora>\nAgora é {{ $now }}\n</DataeHora>\n\n<Roteiro> 1. Analise a mensagem recebida do usuário. 2. Identifique: - **Período solicitado** (mês atual, anterior, intervalo específico, etc.). - **Tipo de dado desejado** (ex: despesas, receitas, saldo, comparação, total). 3. Gere uma **consulta lógica ao banco de dados**, use a tool Consulta Transacoes. 4. Construa o JSON de resposta no formato:\n{\n  \"title\": \"Título claro e humano da consulta\",\n  \"labels\": [\"Categoria 1\", \"Categoria 2\", \"Categoria 3\"],\n  \"values\": [valor1, valor2, valor3]\n}\n\n\nOs valores devem representar somatórios agrupados por categoria no período solicitado.\n\nCaso o usuário não especifique o período, assuma o mês atual.\n\nSe ele pedir receitas, filtre apenas type = 'income'; se pedir despesas, use type = 'expense'.\n\nNão retorne texto adicional — apenas o JSON estruturado.\n\n</Roteiro>\n<Objetivo> O objetivo é transformar solicitações naturais em **resumos numéricos prontos para gráficos**, garantindo que o quickchart receba os campos `title`, `labels` e `values` com precisão.\n\nO sucesso é medido pela clareza do resumo, adequação ao período solicitado e correspondência com o tipo de dado (income/expense).\n</Objetivo>\n\n<Modelo> Formato de saída esperado:\n{\n  \"title\": \"Gastos do mês de Outubro\",\n  \"labels\": [\"Mercado\", \"Transporte\", \"Contas Fixas\"],\n  \"values\": [800, 250, 300]\n}\n\n\ntitle: texto legível e contextual.\n\nlabels: lista com os nomes das categorias (strings).\n\nvalues: lista com os valores totais de cada categoria (números).\n\n</Modelo>\n<Panorama> O sistema **Conta Gasto** permite que o usuário visualize suas finanças diretamente pelo WhatsApp. Esse agente serve como a ponte entre o texto do usuário e os dados do banco, preparando as informações para o fluxo Python que gera gráficos personalizados.\n\nOs dados vêm da tabela transactions (campos principais: user_id, category_id, type, amount, transaction_date).\nCada transação pertence a uma categoria registrada na tabela categories.\n\nExemplos de contexto:\n\n“Me mostra meus gastos do mês passado.” → despesas, agrupadas por categoria, mês anterior.\n\n“Quero ver quanto ganhei em outubro.” → receitas, outubro.\n\n“Resumo do mês.” → despesas + receitas do mês atual.\n\n</Panorama>\n\n<Regras>\n- Retorne **somente JSON válido**, sem explicações, comentários ou texto extra. - Se não houver dados suficientes, retorne listas vazias. - O **título (`title`)** deve ser autoexplicativo, como “Gastos do mês de Outubro” ou “Receitas de Setembro”. - Use o **mês em português** no título.\n</Regras>\n\n<Exemplos>\n\nEntrada:\n\n“Quero ver quanto gastei esse mês.”\n\nSaída:\n\n{\n  \"title\": \"Gastos do mês de Outubro\",\n  \"labels\": [\"Mercado\", \"Transporte\", \"Contas Fixas\"],\n  \"values\": [820.50, 270.00, 310.00]\n}\n\n\nEntrada:\n\n“Mostre minhas receitas de setembro.”\n\nSaída:\n\n{\n  \"title\": \"Receitas de Setembro\",\n  \"labels\": [\"Salário\", \"Freelas\", \"Reembolsos\"],\n  \"values\": [3200, 600, 150]\n}\n\n\nEntrada:\n\n“Quero comparar os gastos de agosto e setembro.”\n\nSaída:\n\n{\n  \"title\": \"Comparativo de Gastos — Agosto vs Setembro\",\n  \"labels\": [\"Agosto\", \"Setembro\"],\n  \"values\": [2450, 2890]\n}\n\n“Qual mês gastei mais.”\n\nSaída:\n\n{\n  \"title\": \"Despesas de cada mes\",\n  \"labels\": [\"janeiro\", \"fevereiro\", \"março\"],\n  \"values\": [2000.50, 5000.00, 3100.00]\n}\n</Exemplos>\n\n\n<Tools>\n- Consulta Transacoes\n- Consulta recorrentes\n- Consulta categorias\n</Tools>\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        656,
+        -64
+      ],
+      "id": "0b35b811-4bc6-460f-8e3d-f88e59a7c2e1",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "transactions",
+          "mode": "list",
+          "cachedResultName": "transactions"
+        },
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "where": {
+          "values": [
+            {
+              "column": "user_id",
+              "value": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        448,
+        112
+      ],
+      "id": "3c00faf2-1d15-4214-a596-f18f62a46338",
+      "name": "Consulta Transacoes"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": " {\n   \"title\": \"Gastos do mês de Outubro\",\n   \"labels\": [\"Mercado\", \"Transporte\", \"Contas Fixas\"],\n   \"values\": [800, 250, 300]\n }"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        976,
+        112
+      ],
+      "id": "240609a7-899a-4b1f-833d-4617cd7f7667",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        656,
+        -192
+      ],
+      "id": "168cb9f5-e367-4ee7-b70c-9db099dbf0ef",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "categories",
+          "mode": "list",
+          "cachedResultName": "categories"
+        },
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "where": {
+          "values": [
+            {
+              "column": "user_id",
+              "value": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        576,
+        176
+      ],
+      "id": "5730a553-a5e5-4fe1-ba24-651a628288ac",
+      "name": "Consulta Categorias"
+    },
+    {
+      "parameters": {
+        "labelsMode": "array",
+        "labelsArray": "={{ $json.output.labels }}",
+        "data": "={{ $json.output.values }}",
+        "chartOptions": {
+          "backgroundColor": "#aef959ff"
+        },
+        "datasetOptions": {
+          "backgroundColor": "#406f41ff",
+          "borderColor": "#ffffffff"
+        }
+      },
+      "type": "n8n-nodes-base.quickChart",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        -64
+      ],
+      "id": "a69f9695-5131-40ac-8d22-6133fcbe84f0",
+      "name": "Grafico personalizado"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        848,
+        160
+      ],
+      "id": "387df20b-85a0-49ab-9fd7-8de9e8a3ddec",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "recurring_transactions",
+          "mode": "list",
+          "cachedResultName": "recurring_transactions"
+        },
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "where": {
+          "values": [
+            {
+              "column": "user_id",
+              "value": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        720,
+        208
+      ],
+      "id": "9240964f-b8b2-4a1c-9553-3f8d77d73904",
+      "name": "Consulta recorrentes"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.phone }}",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1232,
+        -64
+      ],
+      "id": "c983c19e-ccb7-42fb-87f9-e05da9bf1bf1",
+      "name": "Send a photo message",
+      "webhookId": "968c7e39-1274-40d9-af9f-148e91508e9d",
+      "credentials": {
+        "telegramApi": {
+          "id": "lVM4yp8Eg7Xn4HkR",
+          "name": "Telegram Shine"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Grafico personalizado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta Transacoes": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta Categorias": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grafico personalizado": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta recorrentes": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "55bdc66b-50cc-462b-bf53-33f78ffd04af",
+  "meta": {
+    "instanceId": "b90108a00e48da07b398a17bec1403434acda0e19ebb09cf60754c9027c3713a"
+  },
+  "id": "jFGfeAY3CpzvU2hO",
+  "tags": []
+}

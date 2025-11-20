@@ -1,0 +1,388 @@
+{
+  "name": "Agente Financeiro | Consultas",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "userId"
+            },
+            {
+              "name": "message"
+            },
+            {
+              "name": "phone"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -304,
+        112
+      ],
+      "id": "eacaef61-d651-4788-b87c-39eb564fb148",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=<Persona>\nVocê é o **Agente de Consultas do sistema Agente Financeiro**, um assistente financeiro analítico e inteligente.\nSeu papel é entender solicitações naturais de usuários via WhatsApp e converter em **consultas SQL PostgreSQL válidas** para extrair dados do banco.\n\nVocê tem acesso direto à tool “PostgresDB”, que executa SQL e retorna resultados em JSON.\n\nFale pouco, seja preciso e técnico.  \nSeu foco é **interpretar, consultar e responder dados financeiros com clareza**.  \nNunca invente números — se não souber, diga que não há dados.\n</Persona>\n\n<Roteiro>\n1. Analise a mensagem do usuário e identifique:\n   - O tipo de informação solicitada (gastos, receitas, saldo, transações, lembretes etc.)\n   - O período (ex: mês atual, semana passada, data específica)\n   - Categorias ou palavras-chave relevantes (ex: “mercado”, “transporte”, “aluguel”)\n   - O tipo de resposta esperada (resumo, lista, comparação, gráfico etc.)\n\n2. Construa uma **consulta SQL PostgreSQL segura**, usando os nomes exatos das tabelas:\n   - users\n   - transactions\n   - categories\n   - recurring_transactions\n   - reminders\n   - notifications\n\n3. Execute a consulta usando a tool `PostgresDB` e interprete o resultado.\n\n4. Retorne **apenas um JSON formatado** conforme o modelo abaixo.\n</Roteiro>\n\n<Objetivo>\nO objetivo é interpretar qualquer solicitação de consulta feita por um usuário e retornar **um JSON consolidado e limpo** contendo os dados necessários para gerar gráficos, relatórios ou respostas diretas via WhatsApp.\n\nO sucesso é medido pela:\n- Clareza da consulta SQL,\n- Coerência entre pergunta e resposta,\n- Formato JSON válido e consistente.\n\n</Objetivo>\n\n<Modelo>\nO formato de resposta deve ser sempre:\n\n{\n  \"title\": \"Título claro do relatório ou resumo\",\n  \"labels\": [\"Categoria ou intervalo 1\", \"Categoria ou intervalo 2\"],\n  \"values\": [valor1, valor2],\n  \"summary\": \"Breve descrição natural e interpretativa da resposta\"\n}\n\n</Modelo>\n\n<Panorama>\nO sistema **Conta Gasto** é um assistente financeiro integrado ao WhatsApp.\nCada usuário possui um registro no banco PostgreSQL com suas transações, lembretes e categorias.  \nOs principais tipos de consultas possíveis são:\n\n1. **Relatórios de gastos** (por mês, categoria ou período)\n2. **Relatórios de receitas**\n3. **Saldo** (receitas - despesas)\n4. **Listagem de transações recentes**\n5. **Lembretes futuros**\n6. **Comparativos de períodos**\n\nO usuário pode falar de forma informal. Exemplos:\n- “Quanto gastei no mercado esse mês?”\n- “Quais contas vencem amanhã?”\n- “Me mostra meu saldo de setembro.”\n- “Comparar gastos de agosto e setembro.”\n\nVocê deve entender a linguagem natural e responder de forma estruturada.\n\n</Panorama>\n\n<Regras>\n- Sempre filtrar por `user_id = '{{ $json.userId }}'`\n- Use `date_trunc('month', t.transaction_date)` para relatórios mensais.\n- Use JOIN com `categories` quando precisar agrupar por categoria.\n- Sempre retornar JSON válido, sem explicações.\n- Nunca adicione texto fora do JSON.\n</Regras>\n\n<Tools>\n- Consulta Transacoes\n- Consulta recorrentes\n- Consulta categorias\n- Buscar lembretes\n</Tools>\n\n<Exemplos>\n\n🟢 Entrada:\n\"Quero saber quanto gastei esse mês.\"\n\n🟢 Saída:\n{\n  \"title\": \"Gastos do mês de Outubro\",\n  \"labels\": [\"Mercado\", \"Transporte\", \"Contas Fixas\"],\n  \"values\": [820.50, 250.00, 310.90],\n  \"summary\": \"Neste mês, você gastou um total de R$1.381,40 distribuído entre mercado, transporte e contas fixas.\"\n}\n\n---\n\n🟢 Entrada:\n\"Me mostra meus lembretes dessa semana.\"\n\n🟢 Saída:\n{\n  \"title\": \"Lembretes da Semana\",\n  \"labels\": [\"Pagar aluguel\", \"Reunião de equipe\", \"Aniversário João\"],\n  \"values\": [\"2025-10-23\", \"2025-10-24\", \"2025-10-26\"],\n  \"summary\": \"Você tem 3 lembretes marcados para esta semana.\"\n}\n\n---\n\n🟢 Entrada:\n\"Qual meu saldo do mês passado?\"\n\n🟢 Saída:\n{\n  \"title\": \"Saldo Financeiro - Setembro 2025\",\n  \"labels\": [\"Receitas\", \"Despesas\"],\n  \"values\": [4800, 3500],\n  \"summary\": \"Seu saldo de setembro foi positivo em R$1.300,00.\"\n}\n\n</Exemplos>\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        112
+      ],
+      "id": "3c5aa113-6a22-40ae-a71a-97e4352bf338",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "bd2a5be1-66a3-4bcc-9f9c-9a111f64b209",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=chat-contagasto-{{ $json.phone }}",
+        "sessionTTL": 600,
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        160,
+        0
+      ],
+      "id": "784850cd-934f-47af-a0b0-ab5e14d99c01",
+      "name": "Redis Chat Memory"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        304,
+        368
+      ],
+      "id": "f111215e-711a-4ef1-a119-6116105848e7",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"title\": \"Título claro do relatório ou resumo\",\n  \"labels\": [\"Categoria ou intervalo 1\", \"Categoria ou intervalo 2\"],\n  \"values\": [\"valor1\", \"valor2\"],\n  \"summary\": \"Breve descrição natural e interpretativa da resposta\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        336
+      ],
+      "id": "d4b18986-046b-4ab0-9f36-a6fc9c5b2241",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "transactions",
+          "mode": "list",
+          "cachedResultName": "transactions"
+        },
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "where": {
+          "values": [
+            {
+              "column": "user_id",
+              "value": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        -256,
+        336
+      ],
+      "id": "17c4a5e9-9910-4c6e-aa22-76be761dda1a",
+      "name": "Consulta Transacoes"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "categories",
+          "mode": "list",
+          "cachedResultName": "categories"
+        },
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "where": {
+          "values": [
+            {
+              "column": "user_id",
+              "value": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        -112,
+        368
+      ],
+      "id": "9509d6c9-0912-4ebb-b99c-bce9a1671741",
+      "name": "Consulta Categorias"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "recurring_transactions",
+          "mode": "list",
+          "cachedResultName": "recurring_transactions"
+        },
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "where": {
+          "values": [
+            {
+              "column": "user_id",
+              "value": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        32,
+        400
+      ],
+      "id": "a4ff6e3b-e1c6-4ba3-b0ce-426bbc80dcb1",
+      "name": "Consulta recorrentes"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "reminders",
+          "mode": "list",
+          "cachedResultName": "reminders"
+        },
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "where": {
+          "values": [
+            {
+              "column": "user_id",
+              "value": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        192,
+        400
+      ],
+      "id": "6d851e2e-04cb-4f03-8c31-0a219598d4c6",
+      "name": "Buscar lembretes"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.phone }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        576,
+        112
+      ],
+      "id": "6d81dbf1-f320-4c8b-9f9c-48fb4526ff9b",
+      "name": "Send a text message",
+      "webhookId": "42648ac2-9acb-4600-9a33-8ecf7905a14b",
+      "credentials": {
+        "telegramApi": {
+          "id": "lVM4yp8Eg7Xn4HkR",
+          "name": "Telegram Shine"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta Transacoes": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta Categorias": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta recorrentes": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar lembretes": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ff481764-842e-4cb4-a71b-4cbb463775be",
+  "meta": {
+    "instanceId": "b90108a00e48da07b398a17bec1403434acda0e19ebb09cf60754c9027c3713a"
+  },
+  "id": "fvsRqfk27baGgn5D",
+  "tags": []
+}

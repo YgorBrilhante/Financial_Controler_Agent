@@ -1,0 +1,1233 @@
+{
+  "name": "Agente Financeiro | Transaction",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "intent"
+            },
+            {
+              "name": "userId"
+            },
+            {
+              "name": "message"
+            },
+            {
+              "name": "phone"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -576,
+        400
+      ],
+      "id": "03753693-df21-40b0-ae83-590f193f14a1",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=chat-contagasto-{{ $json.phone }}",
+        "sessionTTL": 600,
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        208,
+        528
+      ],
+      "id": "488f6fa9-827a-4cc2-8ea4-68e311227e0c",
+      "name": "Redis Chat Memory"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"categoria_id\": \"3c40b398-1b73-4d4e-9c7c-743b0c9dd00d\",\n  \"categoria\" : \"name\",\n  \"valor\": 0,\n  \"tipo\": \"expense | income \",\n  \"descricao\": \"Breve descrição da transação\",\n  \"frequencia\": \"weekly | monthly | yearly \",\n  \"inicio\": \"2025-10-21T11:07:16.987-03:00\",\n  \"proximo_debito\" : \"2025-10-21\",\n  \"fim\": null\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        256,
+        816
+      ],
+      "id": "468bb650-b701-4c9c-a146-8ce4dd499994",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        528
+      ],
+      "id": "8b57f33e-8b65-4c99-90f7-3fb6d992d05e",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.message }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "transaction",
+              "description": "=Quando o usuário estiver relatando uma transação única, pontual ou isolada, sem indicar periodicidade.\nExemplos: “Gastei 50 no mercado”, “Recebi 2500 de salário”, “Comprei pizza ontem”, “Paguei 120 de Uber”.\n\nPalavras que indicam transação única: hoje, ontem, agora, gastei, recebi, comprei, paguei, ganhei, transferi, vendi.\n\nAtenção: Mesmo que a frase mencione salário, aluguel ou assinatura, se não houver palavras como todo mês, mensalmente, toda semana, sempre, recorrente, deve ser considerada transaction e não recorrente."
+            },
+            {
+              "category": "recurring",
+              "description": "=Quando o usuário mencionar uma transação repetitiva, periódica ou recorrente, como contas mensais, assinaturas ou rendimentos fixos.\nExemplos: “Pago 300 de internet todo mês”, “Recebo 1200 de aluguel mensal”, “Assinatura da Netflix 55 por mês”, “Pago academia toda semana”.\n\nPalavras que indicam recorrência: todo mês, mensalmente, semanalmente, toda semana, sempre, anualmente, por mês, por semana, todo ano, recorrente.\n\nAtenção: Se a frase indicar uma periodicidade mesmo implícita (ex: assinatura, parcela, mensalidade), deve ser recurring."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        -368,
+        400
+      ],
+      "id": "296a2f3c-b779-41c2-a867-c8253775da17",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -368,
+        544
+      ],
+      "id": "01c40dc8-4b5e-4c71-8f34-efb7a7a9ffcd",
+      "name": "OpenAI Chat Model1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=chat-contagasto-{{ $json.phone }}",
+        "sessionTTL": 600,
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        176,
+        0
+      ],
+      "id": "1b5d5eb6-74fa-4fe6-afeb-13deb3607b3a",
+      "name": "Redis Chat Memory1"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"categoria_id\": \"3c40b398-1b73-4d4e-9c7c-743b0c9dd00d\",\n  \"categoria\" : \"name\",\n  \"valor\": 0,\n  \"tipo\": \"expense | income \",\n  \"descricao\": \"Breve descrição da transação\"\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        288
+      ],
+      "id": "7784db95-dc91-4224-bd94-90dd9d47455f",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "00617d8a-272a-4338-96aa-0501408de7f8",
+      "name": "OpenAI Chat Model2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=<Persona>\nAtue como o Agente de Transações do sistema Agente Financeiro, um assistente financeiro especializado em interpretar mensagens naturais e transformá-las em dados estruturados de transações.\nVocê é preciso, direto e entende linguagem cotidiana de finanças (“gastei 20 no mercado”, “ganhei 1000 de salário”).\nNão responda o usuário — apenas retorne os dados extraídos em formato JSON.\n</Persona>\n\n<Roteiro>\nAnalise a mensagem recebida.\n\nIdentifique e extraia:\n\ncategoria → determine com base no contexto, use a tool \"Consulta Categoria\" e use o id da categoria que corresponda e o nome da categoria\n\nvalor → qualquer número monetário mencionado (ex: “R$ 50”, “50 reais”, “150”).\n\ntipo → classifique em: \"expense\" se for gasto, compra, pagamento etc. ou \"income\" se for ganho, recebimento, salário etc.\n\ndescrição → frase curta que resume o que foi informado.\n\nSe algum campo não puder ser identificado, mantenha-o como null.\n\nRetorne o JSON final formatado.\n</Roteiro>\n\n<Objetivo>\nO objetivo é interpretar corretamente as mensagens financeiras dos usuários e retornar dados padronizados para gravação no banco de dados, garantindo clareza e coerência.\nO sucesso é medido pela extração precisa de categoria, valor, tipo e recorrência, com pelo menos 90% de acerto sem intervenção manual.\n</Objetivo>\n\n<Panorama>\nO sistema Conta Gasto registra transações financeiras com base em mensagens enviadas via WhatsApp.\nEsse agente será responsável por gerar os dados necessários para inserir automaticamente na tabela transactions ou recurring_transactions.\nAs informações extraídas serão processadas por automação no n8n e salvas no banco PostgreSQL.\n\nExemplos de contexto:\n\n“Gastei 80 reais no mercado.” → expense, categoria alimentação, valor 80, descricao.\n\n“Recebi 2500 de salário.” → income, categoria salário, valor 2500, descricao.\n</Panorama>\n\n<Regras>\n- Retorne apenas JSON, sem explicações, sem texto extra.\n- O formato deve ser sempre válido e parseável.\n- Caso múltiplas categorias pareçam possíveis, escolha a mais provável.\n</Regras>"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        112
+      ],
+      "id": "30de7a54-67bd-4d62-a7e3-434d6e33d6a7",
+      "name": "Transaction Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=<Persona>\nAtue como o Agente de Transações Recorrentes do sistema Agente Financeiro, um assistente financeiro especializado em interpretar mensagens naturais e transformá-las em dados estruturados de transações.\nVocê é preciso, direto e entende linguagem cotidiana de finanças (“gastei 20 no mercado”, “ganhei 1000 de salário”, “tenho que pagar luz todo mês”).\nNão responda o usuário — apenas retorne os dados extraídos em formato JSON.\n</Persona>\n\n<Roteiro>\nAnalise a mensagem recebida.\n\nIdentifique e extraia:\n\ncategoria → determine com base no contexto, use a tool \"Consulta Categoria\" e use o id da categoria que corresponda e o nome da categoria\n\nvalor → qualquer número monetário mencionado (ex: “R$ 50”, “50 reais”, “150”).\n\ntipo → classifique em: \"expense\" se for gasto, compra, pagamento etc. ou \"income\" se for ganho, recebimento, salário etc.\n\ndescrição → frase curta que resume o que foi informado.\n\ninicio → será {{ $now }}\n\nfrequencia → weekly (se for semanal), monthly (se for mensal), yearly (se for anual)\n\nproximo debito → inserir a data do proximo debito de acordo com a data atual e o prazo de recorrencia\n\nSe algum campo não puder ser identificado, mantenha-o como null.\n\nRetorne o JSON final formatado.\n</Roteiro>\n\n<Objetivo>\nO objetivo é interpretar corretamente as mensagens financeiras dos usuários e retornar dados padronizados para gravação no banco de dados, garantindo clareza e coerência.\nO sucesso é medido pela extração precisa de categoria, valor, tipo e recorrência, com pelo menos 90% de acerto sem intervenção manual.\n</Objetivo>\n\n<Panorama>\nO sistema Conta Gasto registra transações financeiras com base em mensagens enviadas via WhatsApp.\nEsse agente será responsável por gerar os dados necessários para inserir automaticamente na tabela recurring_transactions.\nAs informações extraídas serão processadas por automação no n8n e salvas no banco PostgreSQL.\n\nExemplos de contexto:\n\n“Pago 300 de internet todo mês.” → expense, categoria serviços, valor 300, monthly, inicio (data atual).\n\n</Panorama>\n\n<Regras>\n- Retorne apenas JSON, sem explicações, sem texto extra.\n- O formato deve ser sempre válido e parseável.\n- Caso múltiplas categorias pareçam possíveis, escolha a mais provável.\n</Regras>\n\n<Tools>\nConsulta Categoria\n</Tools>"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        64,
+        640
+      ],
+      "id": "04d41a54-8e51-4259-a1cb-1b1796b681a9",
+      "name": "Recurring Agent"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "categories",
+          "mode": "list",
+          "cachedResultName": "categories"
+        },
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "where": {
+          "values": [
+            {
+              "column": "user_id",
+              "value": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        80,
+        816
+      ],
+      "id": "466686c8-6add-4495-b363-c46c057a2611",
+      "name": "Consulta Categorias"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b747153e-4ecc-4c12-b9e6-cde0bf8a4f9b",
+              "leftValue": "={{ $json.output.categoria }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "feed1b86-22bc-4335-8133-92cfdf52b39a",
+              "leftValue": "={{ $json.output.valor }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "17f91852-1502-4019-8492-c3fa18d67355",
+              "leftValue": "={{ $json.output.tipo }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "50e7dce5-2e32-432d-8e9a-4855fa0c996e",
+              "leftValue": "={{ $json.output.descricao }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "5ce95667-def2-42f3-967c-933e47fa151d",
+              "leftValue": "={{ $json.output.frequencia }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        640
+      ],
+      "id": "b81cd249-6876-42ef-83da-e2b152ca4a66",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "messages",
+          "mode": "list",
+          "cachedResultName": "messages"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('When Executed by Another Workflow').item.json.userId }}",
+            "message": "=",
+            "direction": "out",
+            "created_at": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "direction",
+              "displayName": "direction",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1136,
+        736
+      ],
+      "id": "48000162-8182-4f2e-8def-f736c81fc78c",
+      "name": "Registra resposta"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b747153e-4ecc-4c12-b9e6-cde0bf8a4f9b",
+              "leftValue": "={{ $json.output.categoria }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "feed1b86-22bc-4335-8133-92cfdf52b39a",
+              "leftValue": "={{ $json.output.valor }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "17f91852-1502-4019-8492-c3fa18d67355",
+              "leftValue": "={{ $json.output.tipo }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "50e7dce5-2e32-432d-8e9a-4855fa0c996e",
+              "leftValue": "={{ $json.output.descricao }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        384,
+        112
+      ],
+      "id": "2bb370ac-0c48-4eea-901f-3a3b95f623a6",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "messages",
+          "mode": "list",
+          "cachedResultName": "messages"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('When Executed by Another Workflow').item.json.userId }}",
+            "message": "=",
+            "direction": "out",
+            "created_at": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "direction",
+              "displayName": "direction",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1056,
+        208
+      ],
+      "id": "e6a2755f-091b-4f07-966f-a00793b4ec23",
+      "name": "Registra resposta1"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "categories",
+          "mode": "list",
+          "cachedResultName": "categories"
+        },
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "where": {
+          "values": [
+            {
+              "column": "user_id",
+              "value": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        64,
+        272
+      ],
+      "id": "7f2ddcd7-5315-4a51-9287-0f4e23704dd4",
+      "name": "Consulta Categorias1"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "recurring_transactions",
+          "mode": "list",
+          "cachedResultName": "recurring_transactions"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $('When Executed by Another Workflow').item.json.userId }}",
+            "amount": "={{ $('Recurring Agent').item.json.output.valor }}",
+            "type": "={{ $('Recurring Agent').item.json.output.tipo }}",
+            "description": "={{ $('Recurring Agent').item.json.output.descricao }}",
+            "category_id": "={{ $json.output.categoria_id }}",
+            "frequency": "={{ $('Recurring Agent').item.json.output.frequencia }}",
+            "start_date": "={{ $now }}",
+            "next_due_date": "={{ $json.output.proximo_debito }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category_id",
+              "displayName": "category_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "amount",
+              "displayName": "amount",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "frequency",
+              "displayName": "frequency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "start_date",
+              "displayName": "start_date",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "end_date",
+              "displayName": "end_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "next_due_date",
+              "displayName": "next_due_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_generated",
+              "displayName": "last_generated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        704,
+        736
+      ],
+      "id": "12108a6a-123f-423e-a4e1-5405a23f54d7",
+      "name": "Insere Recorrente"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "transactions",
+          "mode": "list",
+          "cachedResultName": "transactions"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_paid": true,
+            "auto_generated": false,
+            "amount": "={{ $json.output.valor }}",
+            "user_id": "={{ $('When Executed by Another Workflow').item.json.userId }}",
+            "category_id": "={{ $json.output.categoria_id }}",
+            "type": "={{ $json.output.tipo }}",
+            "description": "={{ $json.output.descricao }}",
+            "transaction_date": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category_id",
+              "displayName": "category_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recurring_transaction_id",
+              "displayName": "recurring_transaction_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "amount",
+              "displayName": "amount",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "transaction_date",
+              "displayName": "transaction_date",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_paid",
+              "displayName": "is_paid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "auto_generated",
+              "displayName": "auto_generated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        640,
+        208
+      ],
+      "id": "012b9ab9-b792-4794-a378-5b508eede7ff",
+      "name": "Insere Transacao"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.phone }}",
+        "text": "=Desculpe, não consegui inserir essa transação.\n\nEstá faltando informações",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        640,
+        16
+      ],
+      "id": "03eb90c8-d8c0-43ef-92bc-8899dfc1f6c7",
+      "name": "Erro faltam dados",
+      "webhookId": "90fb4705-f505-4a21-97e8-1f09f2a5f0de",
+      "credentials": {
+        "telegramApi": {
+          "id": "lVM4yp8Eg7Xn4HkR",
+          "name": "Telegram Shine"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.phone }}",
+        "text": "=Desculpe, não consegui inserir essa transação.\n\nEstá faltando informações",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        704,
+        544
+      ],
+      "id": "30850803-458c-4382-9d56-d9b3f894059b",
+      "name": "Erro faltam dados1",
+      "webhookId": "90fb4705-f505-4a21-97e8-1f09f2a5f0de",
+      "credentials": {
+        "telegramApi": {
+          "id": "lVM4yp8Eg7Xn4HkR",
+          "name": "Telegram Shine"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.phone }}",
+        "text": "=*Gasto adicionado*\nCategoria: *{{ $('Transaction Agent').item.json.output.categoria }}*\nTotal: *{{ $('Transaction Agent').item.json.output.valor.format('pt-BR', {'style': 'currency', 'currency': 'BRL'}) }}*",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        848,
+        208
+      ],
+      "id": "f0a05d23-941c-4e1a-922a-14c4bb2dec95",
+      "name": "Responde Inserção",
+      "webhookId": "90fb4705-f505-4a21-97e8-1f09f2a5f0de",
+      "credentials": {
+        "telegramApi": {
+          "id": "lVM4yp8Eg7Xn4HkR",
+          "name": "Telegram Shine"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.phone }}",
+        "text": "=* recorrente adicionado*\nCategoria: *{{ $('If').item.json.output.categoria }}*\nDescrição: *{{ $json.description }}*",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        912,
+        736
+      ],
+      "id": "ba6018c3-7eb2-4956-9052-4dfc4635d473",
+      "name": "Responde Inserção1",
+      "webhookId": "90fb4705-f505-4a21-97e8-1f09f2a5f0de",
+      "credentials": {
+        "telegramApi": {
+          "id": "lVM4yp8Eg7Xn4HkR",
+          "name": "Telegram Shine"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Recurring Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Recurring Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Recurring Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "Transaction Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Recurring Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Transaction Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Transaction Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Transaction Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transaction Agent": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recurring Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta Categorias": {
+      "ai_tool": [
+        [
+          {
+            "node": "Recurring Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Erro faltam dados1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insere Recorrente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Erro faltam dados",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insere Transacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta Categorias1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Transaction Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insere Recorrente": {
+      "main": [
+        [
+          {
+            "node": "Responde Inserção1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insere Transacao": {
+      "main": [
+        [
+          {
+            "node": "Responde Inserção",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responde Inserção": {
+      "main": [
+        [
+          {
+            "node": "Registra resposta1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responde Inserção1": {
+      "main": [
+        [
+          {
+            "node": "Registra resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3a67992c-c487-471a-813a-69165fb9b9a8",
+  "meta": {
+    "instanceId": "b90108a00e48da07b398a17bec1403434acda0e19ebb09cf60754c9027c3713a"
+  },
+  "id": "PhK2JIbunja8ntVd",
+  "tags": []
+}
